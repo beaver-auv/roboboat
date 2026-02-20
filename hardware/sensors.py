@@ -4,6 +4,8 @@ import json
 import time
 from scipy.spatial.transform import Rotation as R
 # from vnpy import VnSensor
+import zmq
+from math import sin, cos
 
 from ezauv.hardware.sensor_interface import Sensor
 
@@ -73,3 +75,31 @@ class VectorNavIMU(Sensor):
 #
 #     def overview(self) -> None:
 #         ...
+
+
+class NetCam(Sensor):
+    def initialize(self, port, addr, context):
+        context = zmq.Context()
+        global socket
+        socket = context.socket(zmq.SUB)
+        socket.connect("tcp://" + addr + ":" + port)
+
+    def get_data():
+        list_data = []
+        data_packed = socket.recv_json()
+
+        classes = data_packed[::3]
+        distences = data_packed[1::3]
+        rotations = data_packed[2::3]
+
+        id = 0
+        for i in range(rotations):
+            x = sin(i) * distences[id]
+            y = cos(i) * distences[id]
+
+            list_data.append((classes[id], float(x), float(y)))
+
+            id = id + 1
+
+        data = {"buoy": list_data}
+        return data
