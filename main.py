@@ -105,6 +105,7 @@ def main():
         )
     )
 
+
     # mission = Path(
     #     # AccelerateVector(AccelerationState(Tx=1, local=False), 3),      # start by going right locally,
     #     # AccelerateVector(AccelerationState(Tx=-1, local=False), 3),     # then slow down by going left locally,
