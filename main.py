@@ -17,7 +17,7 @@ from ezauv.mission.tasks.main.roboboat.navigation_channel import NavigationChann
 from ezauv.mission.tasks.main.roboboat.speed_challenge import SpeedChallenge
 from ezauv.mission.tasks.main.sleep import SleepTask
 from ezauv.telemetry import TELEMETRY
-
+from boat_hardware import BoatHardware
 
 def main():
     motor_locations = [
@@ -34,7 +34,7 @@ def main():
         np.array([1., 1., 0.]),  # motor 4
     ]  # this debug motor configuration is the same as bvr auv's hovercraft
 
-    bounds = [[-0.9, 0.9]] * 4  # motors can't go outside of (-90%, 90%)...
+    bounds = [[-0.4, 0.4]] * 4  # motors can't go outside of (-40%, 40%)...
     deadzone = [[-0.1, 0.1]] * 4  # or inside (-10%, 10%), unless they equal 0 exactly
 
     degrees = [
@@ -61,10 +61,15 @@ def main():
         -0.001137525
     ][::-1]  # this defines our motor's pwm -> thrust curve as t = -0.01 + 0.4p - 0.4p^2 + 1.4p^3
 
-    sim = RoboBoatCore(motor_locations, motor_directions, bounds, deadzone, coefficients=degrees)
-    sim_anchovy = AUV(
+    # sim = RoboBoatCore(motor_locations, motor_directions, bounds, deadzone, coefficients=degrees)
+    hardware = BoatHardware(
+        arduino_port='/dev/ttyUSB0',
+        vectornav_port='/dev/ttyUSB1'
+    )
+
+    anchovy = AUV(
         motor_controller=MotorController(
-            motor_function=sim.motor_interface,
+            motor_function=hardware.set_motors,
             inertia=InertiaBuilder(
                 Cuboid(
                     mass=1,
@@ -85,9 +90,9 @@ def main():
             ],
             coefficients=degrees
         ),
-        sensors=SensorInterface(sensors=[sim.imu(0.05, 0.05, 0.05, 0.05), sim.gps(1), sim.camera(0)]),
+        sensors=SensorInterface(sensors=[hardware.imu]),
         lock_to_yaw=False,
-        clock=sim.clock(),
+        # clock=sim.clock(),
         map=RoboBoatMap(
             max_velocity=5.0,
             bot_radius=np.sqrt(1.5 ** 2 + 1.0 ** 2),  # max distance from center to motor
@@ -115,10 +120,12 @@ def main():
 
     mission = Path(
         # SleepTask(10)
-        EntryGate(
-            3, 0., 0.5, 2., 0., 3.0, 3., 0., 0.,
-            lookahead_distance=1.5
-        )
+        WaypointTask(3, 0., 0.5, 2., 0., 3.0, 3., 0., 0., goal=CircleGridObject(np.array([0,10]), 1.0), lookahead_distance=1.5)
+
+        # EntryGate(
+        #     3, 0., 0.5, 2., 0., 3.0, 3., 0., 0.,
+        #     lookahead_distance=1.5
+        # )
         # NavigationChannel(
         #     5,
         #     1,
@@ -138,7 +145,7 @@ def main():
         # )
     )
     TELEMETRY.begin_communications(None, "S1", "BEAV")
-    sim_anchovy.travel_path(mission, end_telemetry=True)
+    anchovy.travel_path(mission, end_telemetry=True)
 
     # sim_anchovy.travel_path(mission)
     # sim_anchovy.calibrate(Position.ORIGIN)  # set to (0,0,0) at 0 degrees
@@ -165,36 +172,12 @@ def main():
     # ReturnHome()
     # )
 
-    sim.render()  # this draws an animation using pygame; you can see it in videos/animation.mp4
+    # sim.render()  # this draws an animation using pygame; you can see it in videos/animation.mp4
 
     # requests.post( # notify when done
     #     "https://ntfy.sh/",
     #     data="Program finished"
     # )
-    TELEMETRY.draw_graph(
-        [
-            lambda data: data["real velocity x"],
-            lambda data: data["estimated velocity x"]
-        ],
-        ["Real Velocity X", "Estimated Velocity X"],
-        title="Real vs Estimated Velocity X"
-    )
-    TELEMETRY.draw_graph(
-        [
-            lambda data: data["real velocity y"],
-            lambda data: data["estimated velocity y"]
-        ],
-        ["Real Velocity Y", "Estimated Velocity Y"],
-        title="Real vs Estimated Velocity Y"
-    )
-    TELEMETRY.draw_graph(
-        [
-            lambda data: data["real angular velocity"],
-            lambda data: data["estimated angular velocity"]
-        ],
-        ["Real Angular Velocity", "Estimated Angular Velocity"],
-        title="Real vs Estimated Angular Velocity"
-    )
     TELEMETRY.draw_graph(
         [
             lambda data: data["loop time"]
@@ -209,6 +192,7 @@ def main():
         ["Solve Time"],
         title="Solve Time"
     )
+    TELEMETRY.animate()
 
 
 if __name__ == "__main__":

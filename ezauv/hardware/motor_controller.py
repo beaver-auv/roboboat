@@ -6,6 +6,7 @@ from scipy.spatial.transform import Rotation as R
 from abc import ABC, abstractmethod
 from enum import IntEnum
 
+from ezauv.telemetry import TELEMETRY
 from ezauv.utils.logger import LogLevel
 from ezauv import TotalAccelerationState, AccelerationState
 
@@ -88,7 +89,14 @@ class DeadzoneOptimizer:
 
             mask = abs_u > eps_tol
 
+            if not np.any(mask):
+                u = np.zeros_like(u_des)
+                return True, u
+
             eps_max = 1.0
+            # print(abs_u, eps_tol)
+            # print(mask)
+            # print(self.bounds_hi[mask] / abs_u[mask])
             eps_max = min(
                 eps_max,
                 np.min(self.bounds_hi[mask] / abs_u[mask])
@@ -267,6 +275,7 @@ class MotorController:
         Rx, Ry, Rz = acceleration.rotation
         rotated_wanted = np.append(acceleration.translation, np.array([Rx, Ry, Rz]))
 
+        # print(rotated_wanted)
         optimized = self.optimizer.optimize(rotated_wanted, lock_to_yaw)
 
         if not optimized[0]:
@@ -290,7 +299,14 @@ class MotorController:
         # print("Local acceleration:", np.round(acceleration[0:3], 3), "m/s²")
         # print("Motor controls:", [np.round(speed, 10) for speed in motor_controls])
         # print("Total acceleration :", np.round(np.sum(acceleration), 3), "m/s²")
-        
+        for i, motor in enumerate(self.motors):
+            if motor.deadzone.max > motor_controls[i] > motor.deadzone.min:
+                motor_controls[i] = 0.0
+            elif motor_controls[i] > motor.bounds.max:
+                motor_controls[i] = motor.bounds.max
+            elif motor_controls[i] < motor.bounds.min:
+                motor_controls[i] = motor.bounds.min
+        TELEMETRY.submit("motor accelerations", motor_controls)
         return True, motor_controls
 
     def set_motors(self, motor_speeds):

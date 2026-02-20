@@ -25,7 +25,7 @@ class SimulationClient:
     def set(self, index, speed):
         #print(f"Trying to set motor #{index} to speed: {speed}")
         data=self.encode_motor_data(index, speed)
-        print(data)
+        # print(data)
         self.socket.sendall(bytes(data, encoding="utf-8"))
     def set_motor(self, index):
         return lambda speed: self.set(index, speed)

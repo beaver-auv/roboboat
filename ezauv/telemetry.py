@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from enum import Enum
 from ezauv.communications.communications_handler import CommunicationsHandler
+from ezauv.animator import Animator
 import socket
 from multiprocessing import parent_process
 
@@ -13,10 +14,24 @@ class TelemetryManager:
         self.built = None
         self.all_keys = {"timestamp"}
         self.communication_handler = None
+        self.animator = Animator()
+
 
     def begin_communications(self, comms, vehicle_id, team_id):
         self.communication_handler = CommunicationsHandler(comms, vehicle_id, team_id)
         self.communication_handler.start_background()
+        # position: {copy},
+        # rotation: Any,
+        # velocity: {copy},
+        # motor_positions: Any,
+        # motor_accelerations: Any,
+        # debug_text: str = "",
+        # waypoint_locations: {copy} | None = None,
+        # obstacles: Any = None,
+        # visible_obstacles: Any = None,
+        # obstacle_pixels: Any = None,
+        # goal_pixels: Any = None,
+        # goal_location:
 
     def submit(self, name, data):
         self.data[name] = data
@@ -25,6 +40,20 @@ class TelemetryManager:
     def step(self, timestamp):
         entry = {"timestamp": timestamp, **self.data}
         self.telemetry_data.append(entry)
+        self.animator.append(
+            timestamp=timestamp,
+            position = entry.get("position", None),
+            rotation = entry.get("rotation", None),
+            velocity = entry.get("velocity", None),
+            motor_accelerations = [1,1,1,1],
+            debug_text = entry.get("debug text", ""),
+            waypoint_locations = entry.get("waypoint locations", None),
+            obstacles = entry.get("obstacles", None),
+            visible_obstacles = entry.get("visible obstacles", None),
+            obstacle_pixels = entry.get("obstacle pixels", None),
+            goal_pixels = entry.get("goal pixels", None),
+            goal_location = entry.get("goal location", None),
+        )
         self.data = {}
         self.current_step += 1
 
@@ -69,5 +98,7 @@ class TelemetryManager:
         if self.communication_handler:
             self.communication_handler.submit_report(report)
 
+    def animate(self):
+        self.animator.render()
 
 TELEMETRY = TelemetryManager()

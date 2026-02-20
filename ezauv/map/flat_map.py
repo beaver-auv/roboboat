@@ -68,6 +68,8 @@ class FlatMap(Map):
         super().update(sensor_data)
         if(self.position is None):
             self.position = sensor_data.get("position")
+            if self.position is None:
+                self.position = np.array([0.0, 0.0])
             self.P0 = self.P0
             self.R = self.R
             self.kf = KalmanFilter2D(
@@ -154,3 +156,7 @@ class FlatMap(Map):
         TELEMETRY.submit("estimated velocity x", self.velocities[0])
         TELEMETRY.submit("estimated velocity y", self.velocities[1])
         TELEMETRY.submit("estimated angular velocity", self.angular_velocity)
+        TELEMETRY.submit("position", self.position)
+        TELEMETRY.submit("rotation", self.heading)
+        TELEMETRY.submit("velocity", self.velocities)
+
