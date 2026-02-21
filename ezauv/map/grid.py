@@ -5,7 +5,7 @@ from ezauv.map.grid_objects import GridObject
 from ezauv.map.path import Path
 from scipy.ndimage import distance_transform_edt
 from ezauv.simulation.animator import set_goal_pixels, set_obstacle_pixels
-
+from ezauv.telemetry import TELEMETRY
 from multiprocessing import Process, Queue
 import queue
 import time
@@ -64,8 +64,10 @@ class PathManager:
                 self.latest_path, path_id, obstacle_pixels, goal_pixels = self.result_q.get_nowait()
                 if obstacle_pixels is not None:
                     set_obstacle_pixels(obstacle_pixels)
+                    TELEMETRY.submit("obstacle pixels", obstacle_pixels)
                 if goal_pixels is not None:
                     set_goal_pixels(goal_pixels)
+                    TELEMETRY.submit("goal pixels", goal_pixels)
         except queue.Empty:
             pass
         return self.latest_path, path_id

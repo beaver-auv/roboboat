@@ -8,6 +8,9 @@ import numpy as np
 from ezauv.simulation.animator import set_visible_obstacles
 from copy import copy
 
+from ezauv.telemetry import TELEMETRY
+
+
 class Obstacle:
     def __init__(self, position, radius, lifetime=np.inf):
         self.position = position
@@ -73,6 +76,7 @@ class ObstacleMap(FlatMap):
             self.obstacles_dirty = True
         
         set_visible_obstacles(self.obstacles)
+        TELEMETRY.submit("visible obstacles", self.obstacles)
         
 
     def update(self, sensor_data):

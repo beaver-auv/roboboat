@@ -90,7 +90,7 @@ def main():
             ],
             coefficients=degrees
         ),
-        sensors=SensorInterface(sensors=[hardware.imu]),
+        sensors=SensorInterface(sensors=[hardware.imu, hardware.gps]),
         lock_to_yaw=False,
         # clock=sim.clock(),
         map=RoboBoatMap(
@@ -104,7 +104,6 @@ def main():
             rotational_velocity_std=0.05
         )
     )
-
 
     # mission = Path(
     #     # AccelerateVector(AccelerationState(Tx=1, local=False), 3),      # start by going right locally,
@@ -121,7 +120,7 @@ def main():
 
     mission = Path(
         # SleepTask(10)
-        WaypointTask(3, 0., 0.5, 2., 0., 3.0, 3., 0., 0., goal=CircleGridObject(np.array([0,10]), 1.0), lookahead_distance=1.5)
+        WaypointTask(3, 0., 0.5, 2., 0., 3.0, 3., 0., 0., goal=CircleGridObject(np.array([10,0]), 1.0), lookahead_distance=1.5)
 
         # EntryGate(
         #     3, 0., 0.5, 2., 0., 3.0, 3., 0., 0.,
@@ -192,6 +191,14 @@ def main():
         ],
         ["Solve Time"],
         title="Solve Time"
+    ),
+    TELEMETRY.draw_graph(
+        [
+            lambda data: data["position measurement x"],
+            lambda data: data["position x"]
+        ],
+        ["Position Measurement X", "Position Estimate X"],
+        title="Position Measurement vs Estimate X"
     )
     TELEMETRY.animate()
 

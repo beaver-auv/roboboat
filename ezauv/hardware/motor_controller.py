@@ -306,7 +306,7 @@ class MotorController:
                 motor_controls[i] = motor.bounds.max
             elif motor_controls[i] < motor.bounds.min:
                 motor_controls[i] = motor.bounds.min
-        TELEMETRY.submit("motor accelerations", motor_controls)
+        TELEMETRY.submit("accelerations", motor_controls)
         return True, motor_controls
 
     def set_motors(self, motor_speeds):

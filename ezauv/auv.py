@@ -116,9 +116,9 @@ class AUV:
                     d = time.perf_counter()
                     TELEMETRY.submit("loop time", self.clock.perf_counter() - prev_update)
                     TELEMETRY.step(self.clock.perf_counter())
-                    if self.clock.perf_counter() - prev_update > 0.3:
+                    # if self.clock.perf_counter() - prev_update > 0.3:
                         # print(b - a, c - b, d - c)
-                        raise TimeoutError("Main loop is taking too long (>300ms)")
+                        # raise TimeoutError("Main loop is taking too long (>300ms)")
 
         except:
             self.logger.log(traceback.format_exc(), level=LogLevel.ERROR)

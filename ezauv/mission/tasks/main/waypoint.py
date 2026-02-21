@@ -7,6 +7,7 @@ import numpy as np
 import math
 from ezauv.simulation.animator import set_waypoint, set_goal, set_text
 import time
+from ezauv.telemetry import TELEMETRY
 
 
 class WaypointTask(DirectVelocityTask):
@@ -66,7 +67,8 @@ class WaypointTask(DirectVelocityTask):
                 # set_text("")
                 self.debug_empty_path_start_time = None
                 self.final_heading = self.get_final_heading(self.path)
-                set_goal(np.array([self.path.end[0], self.path.end[1]]))
+                set_goal((self.path.end[0], self.path.end[1]))
+                TELEMETRY.submit("goal", np.array([self.path.end[0], self.path.end[1]]))
         if self.wanted_ticket is not None:
             if self.debug_empty_path_start_time is None:
                 self.debug_empty_path_start_time = time.time()
@@ -74,6 +76,7 @@ class WaypointTask(DirectVelocityTask):
             if self.path is None:
                 return (self.map.heading, 0.0)
         set_waypoint(self.path.waypoints)
+        TELEMETRY.submit("waypoint locations", self.path.waypoints)
 
         
         

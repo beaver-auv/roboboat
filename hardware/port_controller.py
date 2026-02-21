@@ -27,4 +27,5 @@ class DebugPortController:
 
     def write(self, data, encoding= 'utf-8'):
         """Write `data` to port using `encoding`"""
-        print("Writing to port:", data)
+        # print("Writing to port:", data)
+        ...

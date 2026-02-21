@@ -4,7 +4,7 @@ import json
 import time
 from scipy.spatial.transform import Rotation as R
 # from vnpy import VnSensor
-import zmq
+# import zmq
 from math import sin, cos
 
 from ezauv.hardware.sensor_interface import Sensor
@@ -29,7 +29,7 @@ class DebugVectorNav:
     def read_data(self):
         return {
             "rotation": R.from_euler("zyx", [0, 0, 0]),
-            "acceleration": np.array([0, 0, 0])
+            "acceleration": np.array([10., 0, 0])
         }
 
 class VectorNavIMU(Sensor):
@@ -44,7 +44,7 @@ class VectorNavIMU(Sensor):
         return {
             "rotation": rot,
             "acceleration": data["acceleration"],
-            "heading": (rot.as_euler('zyx')[0] + self.calibrated_heading) % 360
+            "heading": (rot.as_euler('zyx')[0] + self.calibrated_heading) % np.pi
         }
 
     def initialize(self) -> None:
@@ -59,6 +59,19 @@ class VectorNavIMU(Sensor):
 
     def overview(self) -> None:
         print(f"VectorNav IMU")
+import time
+class DebugGPS(Sensor):
+    def __init__(self):
+        self.start = 0
+
+    def get_data(self) -> dict:
+        return {"position": [5 * (time.time() - self.start) ** 2, 0]}
+
+    def initialize(self) -> None:
+        self.start = time.time()
+
+    def overview(self) -> None:
+        print(f"Debug GPS")
 
 # class Camera(Sensor):
 #     def __init__(self):
@@ -77,29 +90,29 @@ class VectorNavIMU(Sensor):
 #         ...
 
 
-class NetCam(Sensor):
-    def initialize(self, port, addr, context):
-        context = zmq.Context()
-        global socket
-        socket = context.socket(zmq.SUB)
-        socket.connect("tcp://" + addr + ":" + port)
-
-    def get_data():
-        list_data = []
-        data_packed = socket.recv_json()
-
-        classes = data_packed[::3]
-        distences = data_packed[1::3]
-        rotations = data_packed[2::3]
-
-        id = 0
-        for i in range(rotations):
-            x = sin(i) * distences[id]
-            y = cos(i) * distences[id]
-
-            list_data.append((classes[id], float(x), float(y)))
-
-            id = id + 1
-
-        data = {"buoy": list_data}
-        return data
+# class NetCam(Sensor):
+#     def initialize(self, port, addr, context):
+#         context = zmq.Context()
+#         global socket
+#         socket = context.socket(zmq.SUB)
+#         socket.connect("tcp://" + addr + ":" + port)
+#
+#     def get_data():
+#         list_data = []
+#         data_packed = socket.recv_json()
+#
+#         classes = data_packed[::3]
+#         distences = data_packed[1::3]
+#         rotations = data_packed[2::3]
+#
+#         id = 0
+#         for i in range(rotations):
+#             x = sin(i) * distences[id]
+#             y = cos(i) * distences[id]
+#
+#             list_data.append((classes[id], float(x), float(y)))
+#
+#             id = id + 1
+#
+#         data = {"buoy": list_data}
+#         return data

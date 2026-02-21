@@ -103,6 +103,7 @@ class FlatMap(Map):
                 imu_accel=(ax, ay),
             )
         else:
+            # print("dt:", dt)
             self.kf.predict(
                 dt=dt,
                 imu_accel=(0.0, 0.0),
@@ -121,6 +122,7 @@ class FlatMap(Map):
                 [1, 0, 0, 0, 0, 0],
                 [0, 1, 0, 0, 0, 0],
             ])
+            TELEMETRY.submit("position measurement x", position[0])
 
         if rotation is not None:
             theta = sensor_data.get("heading", None)
@@ -159,4 +161,4 @@ class FlatMap(Map):
         TELEMETRY.submit("position", self.position)
         TELEMETRY.submit("rotation", self.heading)
         TELEMETRY.submit("velocity", self.velocities)
-
+        TELEMETRY.submit("position x", self.position[0])

@@ -82,6 +82,7 @@ class Animator:
         for pix in frame_info['goal_pixels']:
             self.screen.set_at(self.to_screen(pix), (255, 255, 0))
 
+        # print(screen_points)
         pygame.draw.polygon(self.screen, (0,0,0), screen_points)
 
         front_endpoint = position + np.array([cos_a, sin_a]) * 1.5

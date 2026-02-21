@@ -45,14 +45,14 @@ class TelemetryManager:
             position = entry.get("position", None),
             rotation = entry.get("rotation", None),
             velocity = entry.get("velocity", None),
-            motor_accelerations = [1,1,1,1],
+            motor_accelerations = entry.get("accelerations", None),
             debug_text = entry.get("debug text", ""),
             waypoint_locations = entry.get("waypoint locations", None),
             obstacles = entry.get("obstacles", None),
             visible_obstacles = entry.get("visible obstacles", None),
             obstacle_pixels = entry.get("obstacle pixels", None),
             goal_pixels = entry.get("goal pixels", None),
-            goal_location = entry.get("goal location", None),
+            goal_location = entry.get("goal", None),
         )
         self.data = {}
         self.current_step += 1
@@ -60,7 +60,7 @@ class TelemetryManager:
     def build_arrays(self):
         self.built = {}
         for key in self.all_keys:
-            self.built[key] = np.array([entry.get(key, np.nan) for entry in self.telemetry_data])
+            self.built[key] = np.array([entry.get(key, np.nan) for entry in self.telemetry_data], dtype=object)
 
     def kill(self):
         print("Stopping telemetry...")
