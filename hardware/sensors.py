@@ -6,12 +6,16 @@ from scipy.spatial.transform import Rotation as R
 # from vnpy import VnSensor
 import zmq
 from math import sin, cos
+import serial
+import time
+import pynmea2
+import math
 
 from ezauv.hardware.sensor_interface import Sensor
 
 class VectorNav:
     def __init__(self, port, baud):
-        # self.vectornav = VnSensor()
+        self.vectornav = VnSensor()
         self.vectornav.connect(port, baud)
 
     def read_data(self):
@@ -34,7 +38,7 @@ class DebugVectorNav:
 
 class VectorNavIMU(Sensor):
     def __init__(self, port, baud):
-        self.vectornav = DebugVectorNav(port, baud)
+        self.vectornav = VectorNav(port, baud)
         self.calibrated_heading = 0
 
     def get_data(self) -> dict:
@@ -59,19 +63,86 @@ class VectorNavIMU(Sensor):
 
     def overview(self) -> None:
         print(f"VectorNav IMU")
-import time
-class DebugGPS(Sensor):
-    def __init__(self):
-        self.start = 0
 
-    def get_data(self) -> dict:
-        return {"position": [5 * (time.time() - self.start) ** 2, 0]}
+def latlon_to_xy(lat, lon, lat0, lon0): #
+    R = 6378137.0
+    lat_rad = math.radians(lat)
+    lon_rad = math.radians(lon)
+    lat0_rad = math.radians(lat0)
+    lon0_rad = math.radians(lon0)
 
-    def initialize(self) -> None:
-        self.start = time.time()
+    dlat = lat_rad - lat0_rad
+    dlon = lon_rad - lon0_rad
 
-    def overview(self) -> None:
-        print(f"Debug GPS")
+    x = dlon * math.cos(lat0_rad) * R
+    y = dlat * R
+    return x, y
+
+def handle_line(line):
+    if not line.startswith('$') or 'GGA' not in line:
+        return None
+    try:
+        msg = pynmea2.parse(line)
+
+        return {
+            "lat": msg.latitude,
+            "lon": msg.longitude,
+            "alt": msg.altitude,
+            "sats": int(msg.num_sats)
+        }
+
+        # for debugging
+        print(
+            label,
+            "Lat:", msg.latitude,
+            "Lon:", msg.longitude,
+            "Alt:", msg.altitude,
+            "Sats:", msg.num_sats
+        )
+
+    except (pynmea2.ParseError, AttributeError):
+        return None
+
+class GPS(Sensor):
+    def __init__(self, port_1 = '/dev/ttyAMA0', port_2 = '/dev/ttyAMA1', baud = 9600):
+        self.gps_1 = serial.Serial(port_1, baudrate=baud, timeout=0.5)
+        self.gps_2 = serial.Serial(port_2, baudrate=baud, timeout=0.5)
+        self.latest = None
+        self.origin = None
+
+    def get_data(self):
+        line_1 = self.gps_1.readline().decode(errors='ignore').strip()
+        line_2 = self.gps_2.readline().decode(errors='ignore').strip()
+
+        data_1 = handle_line(line_1)
+        data_2 = handle_line(line_2)
+
+        average = None
+        if data_1 is not None:
+            if data_2 is not None:
+                average = {
+                    "lat": (data_1["lat"] + data_2["lat"]) / 2,
+                    "lon": (data_1["lon"] + data_2["lon"]) / 2,
+                    "alt": (data_1["alt"] + data_2["alt"]) / 2,
+                    "sats": max(data_1["sats"], data_2["sats"])
+                }
+            else:
+                average = data_1
+        elif data_2 is not None:
+            average = data_2
+        if average is None:
+            if self.latest is None:
+                return [0,0]
+            return self.latest
+
+
+        # Set origin on first valid averaged fix
+        if self.origin is None:
+            self.origin = {"lat": average["lat"], "lon": average["lon"]}
+
+        x, y = latlon_to_xy(average["lat"], average["lon"], self.origin["lat"], self.origin["lon"])
+        self.latest = [x,y]
+        return {"position": [x,y]}
 
 # class Camera(Sensor):
 #     def __init__(self):
@@ -97,7 +168,7 @@ class NetCam(Sensor):
         socket = context.socket(zmq.SUB)
         socket.connect("tcp://" + addr + ":" + port)
 
-    def get_data():
+    def get_data(self):
         list_data = []
         data_packed = socket.recv_json()
 
