@@ -1,11 +1,11 @@
 from hardware.motor_serial import MotorSerial
-from hardware.sensors import VectorNavIMU, DebugGPS
+from hardware.sensors import VectorNavIMU, GPS
 
 class BoatHardware:
     def __init__(self, *, arduino_port, vectornav_port):
         self.motor_serial = MotorSerial(arduino_port)
         self.imu = VectorNavIMU(vectornav_port, 921600)
-        self.gps = DebugGPS()
+        self.gps = GPS()
 
         self.prev = {}
 

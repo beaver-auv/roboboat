@@ -144,6 +144,12 @@ class GPS(Sensor):
         self.latest = [x,y]
         return {"position": [x,y]}
 
+    def initialize(self):
+        pass
+
+    def overview(self):
+        print(f"GPS with ports {self.gps_1.port} and {self.gps_2.port}")
+
 # class Camera(Sensor):
 #     def __init__(self):
 #         ...
