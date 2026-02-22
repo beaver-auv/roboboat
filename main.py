@@ -21,15 +21,15 @@ from boat_hardware import BoatHardware
 
 def main():
     motor_locations = [
-        np.array([-1.5, 1., 0.]),  # motor 1
-        np.array([-1.5, -1., 0.]),  # motor 2
-        np.array([1.5, 1., 0.]),  # motor 3
+        np.array([1.5, 1., 0.]),  # motor 1
+        np.array([-1.5, 1., 0.]),  # motor 2
+        np.array([-1.5, -1., 0.]),  # motor 3
         np.array([1.5, -1., 0.]),  # motor 4
     ]
 
     motor_directions = [
-        np.array([1., 1., 0.]),  # motor 1
-        np.array([1., -1., 0.]),  # motor 2
+        np.array([1., -1., 0.]),  # motor 1
+        np.array([1., 1., 0.]),  # motor 2
         np.array([1., -1., 0.]),  # motor 3
         np.array([1., 1., 0.]),  # motor 4
     ]  # this debug motor configuration is the same as bvr auv's hovercraft

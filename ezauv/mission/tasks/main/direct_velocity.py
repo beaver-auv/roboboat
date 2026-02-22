@@ -45,4 +45,8 @@ class DirectVelocityTask(VelocityTask):
         # print("Desired forward speed:", np.round(forward,2))
         # print("Forward vector (local):", np.round(local_forward,2))
         # print(heading_signal)
+        DEBUG = False
+        if DEBUG:
+            return forward * np.array([1.0, 1.0, 1.0, 1.0]) + heading_signal * np.array([-1.0, 1.0, 1.0, -1.0])
+
         return VelocityState(local=True, Rz=heading_signal, Tx=local_forward[0], Ty=local_forward[1])

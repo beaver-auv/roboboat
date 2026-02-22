@@ -292,6 +292,22 @@ class MotorController:
                 min([r.real for r in roots if abs(r.imag) < 1e-8],
                 key=lambda x: abs(x))
             )
+        DEBUG = False
+        if DEBUG: # debug
+            acceleration_angle = np.arctan2(rotated_wanted[1], rotated_wanted[0])
+            acceleration_magnitude = np.linalg.norm(acceleration_angle)
+            SET_ANGLES = {
+                0: [1, 1, 1, 1],
+                np.pi/2: [1, -1, 1, -1],
+                np.pi: [-1, -1, -1, -1],
+                3*np.pi/2: [-1, 1, -1, 1]
+            }
+            nearest_angle = min(SET_ANGLES.keys(), key=lambda a: abs(a - acceleration_angle))
+            accelerations = np.array(SET_ANGLES[nearest_angle]) * acceleration_magnitude
+            rotations = np.array([-Rz, Rz, Rz, -Rz])
+            motor_controls = accelerations + rotations
+
+
         # acceleration = self.motor_matrix @ optimized[1]
         # # print("Motor matrix:\n", self.motor_matrix)
         # # print("Motor controls:", [np.round(speed, 3) for speed in motor_controls])
