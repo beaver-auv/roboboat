@@ -1,3 +1,4 @@
 [submodule "ezauv"]
 	path = ezauv
-	url = https://github.com/beaver-auv/ezauv.git
+  url = https://github.com/beaver-auv/ezauv.git
+  branch = main
